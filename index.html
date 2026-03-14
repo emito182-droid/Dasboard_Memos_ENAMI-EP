@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Documental ENAMI EP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #002d5d;
+            --gold: #b45309;
+            --green: #27ae60;
+            --bg: #f1f5f9;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            color: #1e293b;
+        }
+
+        header {
+            background: var(--navy);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        /* Buscador y Selector */
+        .search-area {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border);
+        }
+
+        select {
+            width: 100%;
+            max-width: 600px;
+            padding: 12px;
+            border: 2px solid var(--navy);
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--navy);
+            outline: none;
+        }
+
+        /* Estructura del Dashboard */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .full-width { grid-column: 1 / -1; }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+
+        .asunto-card {
+            background: #fffbeb;
+            border-left: 6px solid var(--gold);
+        }
+
+        .label {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--navy);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .type-badge {
+            background: var(--navy);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .copia-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .copia-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 14px;
+            color: #475569;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard { grid-template-columns: 1fr; }
+            .copia-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1 style="margin:0; font-size: 1.5rem;">PORTAL DE CONSULTA DOCUMENTAL</h1>
+        <p style="margin:5px 0 0 0; opacity: 0.8;">ENAMI EP - Acceso Independiente</p>
+    </header>
+
+    <div class="container">
+        <div class="search-area">
+            <span class="label">Seleccione un Memorando, Oficio o Resolución</span>
+            <select id="memoSelector" onchange="render()"></select>
+        </div>
+
+        <div id="dashboardView" class="dashboard">
+            </div>
+    </div>
+
+    <script src="data.js"></script>
+
+    <script>
+        const selector = document.getElementById('memoSelector');
+        const view = document.getElementById('dashboardView');
+
+        // Cargar las opciones en el selector
+        function init() {
+            if (typeof documentos === 'undefined') {
+                view.innerHTML = "<h2 style='text-align:center; grid-column: 1/-1;'>Error: No se encontró el archivo data.js</h2>";
+                return;
+            }
+
+            const ids = Object.keys(documentos).sort().reverse();
+            ids.forEach(id => {
+                const opt = document.createElement('option');
+                opt.value = id;
+                opt.innerText = id;
+                selector.appendChild(opt);
+            });
+            render();
+        }
+
+        function render() {
+            const doc = documentos[selector.value];
+            if (!doc) return;
+
+            const copiasHtml = doc.copias.length > 0 
+                ? doc.copias.map(c => `<div class="copia-item">${c}</div>`).join('')
+                : '<div style="color:#94a3b8">No se registran copias</div>';
+
+            view.innerHTML = `
+                <div class="card full-width">
+                    <div class="header-info">
+                        <div>
+                            <span class="type-badge">${doc.tipo}</span>
+                            <h2 style="margin: 8px 0 0 0; color: var(--navy);">${doc.id}</h2>
+                        </div>
+                        <b style="color: #64748b;">${doc.fecha}</b>
+                    </div>
+                </div>
+
+                <div class="card full-width asunto-card">
+                    <span class="label" style="color: var(--gold);">Asunto / Resolución</span>
+                    <div style="font-size: 1.2rem; line-height: 1.6; font-weight: 500;">${doc.asunto}</div>
+                </div>
+
+                <div class="card">
+                    <span class="label">Destinatario (PARA)</span>
+                    <div style="line-height: 1.5;">${doc.para}</div>
+                </div>
+
+                <div class="card">
+                    <span class="label" style="color: var(--green);">Remitente (DE)</span>
+                    <div style="line-height: 1.5;">${doc.de}</div>
+                </div>
+
+                <div class="card full-width">
+                    <span class="label">Copia de cortesía a:</span>
+                    <div class="copia-grid">${copiasHtml}</div>
+                </div>
+            `;
+        }
+
+        init();
+    </script>
+</body>
+</html>
